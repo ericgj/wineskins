@@ -11,6 +11,15 @@ module Godwit
       self.dest = dest
     end
 
+    def transfer_schema(opts={})
+      tbls = source.tables
+      tbls = tbls & opts[:include]  if opts[:include]
+      tbls = tbls - opts[:exclude]  if opts[:exclude]
+      tbls.each do |tbl|
+        transfer_table tbl
+      end
+    end
+    
     def transfer_table(tbl, renames=nil)
       src_tbl, dst_tbl = Array(tbl)
       dst_tbl ||= src_tbl
@@ -46,6 +55,9 @@ module Godwit
       end
     end
     
+    # note no renaming of target table
+    # also more complicated scenarios (multi-column, non-numeric keys etc) 
+    # are not yet tested
     def transfer_foreign_keys(tbl, renames=nil)
       src_tbl, dst_tbl = Array(tbl)
       dst_tbl ||= src_tbl
