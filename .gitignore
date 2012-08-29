@@ -1,3 +1,7 @@
 scratch
 *.sqlite3
 *.log
+*.mdw
+*.mdb
+*.ldb
+

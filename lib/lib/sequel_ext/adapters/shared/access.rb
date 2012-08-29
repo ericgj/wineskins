@@ -14,6 +14,23 @@ module Sequel
   module Access
     module DatabaseMethods
     
+      DECIMAL_TYPE_RE = /decimal/io
+      
+      def schema_column_type(db_type)
+        case db_type
+        when /\A(bit)\z/io
+          :boolean
+        when /\A(byte)\z/io
+          :integer
+        when /\A(guid)\z/io
+          :integer
+        when /\A(image)\z/io
+          :blob
+        else
+          super
+        end
+      end
+      
       def schema_parse_table(table_name, opts)
         m = output_identifier_meth(opts[:dataset])
         idxs = ado_schema_indexes(table_name)
@@ -26,13 +43,30 @@ module Sequel
                               idx["COLUMN_NAME"] == row["COLUMN_NAME"] &&
                               idx["PRIMARY_KEY"]
                             },
-            #:ruby_default => nil,
-            :type => schema_column_type(row.db_type),
+            :type =>  if row.db_type =~ DECIMAL_TYPE_RE && row.scale == 0
+                        :integer
+                      else
+                        schema_column_type(row.db_type)
+                      end,
             :ado_type => row["DATA_TYPE"]
           }
           specs[:default] = nil if blank_object?(specs[:default])
           [ m.call(row["COLUMN_NAME"]), specs ]
         }
+      end
+      
+      def indexes(table_name)
+        m = output_identifier_meth
+        idxs = ado_schema_indexes(table_name).inject({}) do |memo, idx|
+          unless idx["PRIMARY_KEY"]
+            index = memo[m.call(idx["INDEX_NAME"])] ||= {
+              :columns=>[], :unique=>idx["UNIQUE"]
+            }
+            index[:columns] << m.call(idx["COLUMN_NAME"])
+          end
+          memo
+        end
+        idxs
       end
       
       def ado_schema_indexes(table_name)
@@ -111,7 +145,7 @@ module Sequel
             2   => "SMALLINT",
             3   => "INTEGER",
             4   => "REAL",
-            5   => "FLOAT",
+            5   => "DOUBLE",
             6   => "MONEY",
             7   => "DATETIME",
             11  => "BIT",
