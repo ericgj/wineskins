@@ -11,11 +11,25 @@ class << (TEST_DB = Object.new)
   def dest   
     @dest ||= Sequel.connect('sqlite://test/fixtures/db/dest.sqlite3')
   end
+
+  def source_ado
+    dir = File.expand_path("fixtures/db/", 
+                           File.dirname(__FILE__)
+                          ).tr('/','\\')
+    conn_string = \
+      "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=#{dir}/source-ado.mdb;Jet OLEDB:System Database=#{dir}/source-ado.mdw;User ID=Admin;Password=admin!;"
+    @source_ado ||= Sequel.ado(:conn_string => conn_string)
+  end
   
   def setup
     source.loggers << ::Logger.new('test/log/source.log')
     dest.loggers << ::Logger.new('test/log/dest.log')
   end
+  
+  def setup_ado
+    source_ado.loggers << ::Logger.new('test/log/source-ado.log')
+  end
+  
 end
 
 class SequelSpec < MiniTest::Spec

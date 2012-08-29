@@ -16,7 +16,7 @@ module TransferTableTestHelpers
       String :name
       Integer :count, :index => true
       index :name, :name => :name_index_poo, :unique => true
-      foreign_key :user_id, :users, :deferrable => true
+      foreign_key :user_id, :users, :on_delete => :cascade
     end
   end
   
