@@ -1,5 +1,5 @@
 ﻿require File.expand_path('./helper', File.dirname(__FILE__))
-require File.expand_path('../lib/godwit', File.dirname(__FILE__))
+require File.expand_path('../lib/wineskins', File.dirname(__FILE__))
 
 TEST_DB.setup
 
@@ -79,7 +79,7 @@ module TransferRecordsTestHelpers
 end
 
 describe 'transfer_records, functional' do
-  subject { Godwit::Transfer.new(source, dest) }
+  subject { Wineskins::Transfer.new(source, dest) }
   let(:source) { TEST_DB.source }
   let(:dest)   { TEST_DB.dest   }
   

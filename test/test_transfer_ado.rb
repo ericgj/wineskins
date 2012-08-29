@@ -1,5 +1,5 @@
 ﻿require File.expand_path('./helper', File.dirname(__FILE__))
-require File.expand_path('../lib/godwit', File.dirname(__FILE__))
+require File.expand_path('../lib/wineskins', File.dirname(__FILE__))
 
 TEST_DB.setup_ado
 TEST_DB.setup
@@ -86,7 +86,7 @@ end
 describe 'transfer_table, ADO adapter, functional' do
   include TransferADOTestHelpers
   
-  subject { Godwit::Transfer.new(source, dest) }
+  subject { Wineskins::Transfer.new(source, dest) }
   let(:source) { TEST_DB.source_ado }
   let(:dest)   { TEST_DB.dest   }
   
@@ -119,7 +119,7 @@ end
 describe 'transfer_records, ADO adapter, functional' do
   include TransferADOTestHelpers
 
-  subject { Godwit::Transfer.new(source, dest) }
+  subject { Wineskins::Transfer.new(source, dest) }
   let(:source) { TEST_DB.source_ado }
   let(:dest)   { TEST_DB.dest   }
 
