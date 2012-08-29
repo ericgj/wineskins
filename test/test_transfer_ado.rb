@@ -1,27 +1,20 @@
-﻿# Unfortunately the ADO adapter (for Access anyway) doesn't give us
-# any schema query methods... so this is basically impossible
-
-require File.expand_path('./helper', File.dirname(__FILE__))
+﻿require File.expand_path('./helper', File.dirname(__FILE__))
 require File.expand_path('../lib/godwit', File.dirname(__FILE__))
 
 TEST_DB.setup_ado
+TEST_DB.setup
 
 module TransferADOTestHelpers
 
   def setup_source
-    TEST_DB.source_ado.create_table! :users do
+    TEST_DB.source_ado.disconnect
+    TEST_DB.source_ado.drop_table :tests if TEST_DB.source_ado.tables.include?(:tests)
+    TEST_DB.source_ado.drop_table :users if TEST_DB.source_ado.tables.include?(:users)
+    
+    TEST_DB.source_ado.create_table :users do
       primary_key :uid
       String :username
       DateTime :joined_at
-    end
-    
-    TEST_DB.source_ado.create_table! :tests do
-      primary_key :id
-      String :name
-      Integer :score, :index => true
-      DateTime :taken_at
-      index :name
-      foreign_key :user_id, :users, :on_delete => :cascade
     end
     
     TEST_DB.source_ado[:users].multi_insert([
@@ -37,6 +30,15 @@ module TransferADOTestHelpers
       {:uid => 10, :username => "Lambert", :joined_at => Time.now - rand(60*60*24)},
       {:uid => 11, :username => "Percy", :joined_at => Time.now - rand(60*60*24)}
     ])
+    
+    TEST_DB.source_ado.create_table :tests do
+      primary_key :id
+      String :name
+      Integer :score, :index => true
+      DateTime :taken_at
+      index :name
+      foreign_key :user_id, :users, :on_delete => :cascade
+    end
 
     TEST_DB.source_ado[:tests].multi_insert([
       {:id => 1, :name => 'test1', :score => 65, :taken_at => Time.now - rand(60*60*24)},
@@ -62,6 +64,23 @@ module TransferADOTestHelpers
     end
   end
   
+  def matchable_specs
+    [:allow_null, :primary_key, :type]
+  end
+  
+  # note that for whatever reason, :allow_null => true when creating primary_key columns
+  # so this is a hack to ignore checking match of :allow_null
+  def matchable_schema(info)
+    col, specs = info
+    {:column => col}.merge(
+      if specs[:primary_key]
+        Hash[ specs.select {|k,v| (matchable_specs - [:allow_null]).include?(k)} ]
+      else
+        Hash[ specs.select {|k,v| matchable_specs.include?(k)} ]
+      end
+    )  
+  end
+  
 end
 
 describe 'transfer_table, ADO adapter, functional' do
@@ -79,6 +98,42 @@ describe 'transfer_table, ADO adapter, functional' do
   it 'should create a table in dest' do
     subject.transfer_table :tests
     assert_includes dest.tables, :tests 
+  end
+
+  it 'should match schema specs in source' do
+    subject.transfer_table :tests
+
+    filter = method(:matchable_schema)
+    exp = source.schema(:tests).map(&filter)
+    act = dest.schema(:tests).map(&filter)
+    assert_equal exp, act
+  end  
+  
+  it 'should match index specs in source' do
+    subject.transfer_table :tests
+    assert_equal source.indexes(:tests), dest.indexes(:tests)
+  end
+  
+end
+
+describe 'transfer_records, ADO adapter, functional' do
+  include TransferADOTestHelpers
+
+  subject { Godwit::Transfer.new(source, dest) }
+  let(:source) { TEST_DB.source_ado }
+  let(:dest)   { TEST_DB.dest   }
+
+  before do
+    setup_source
+    setup_dest
+  end
+  
+  it 'should insert records matching source' do
+    subject.transfer_records :users
+    exp = source[:users].all.sort {|a,b| a[:uid] <=> b[:uid]}
+    act = dest[:users].all.sort   {|a,b| a[:uid] <=> b[:uid]}
+    refute_empty act
+    assert_equal exp, act
   end
   
 end

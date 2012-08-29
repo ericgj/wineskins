@@ -51,11 +51,12 @@ module Sequel
             :ado_type => row["DATA_TYPE"]
           }
           specs[:default] = nil if blank_object?(specs[:default])
+          specs[:allow_null] = specs[:allow_null] && !specs[:primary_key]
           [ m.call(row["COLUMN_NAME"]), specs ]
         }
       end
       
-      def indexes(table_name)
+      def indexes(table_name,opts={})
         m = output_identifier_meth
         idxs = ado_schema_indexes(table_name).inject({}) do |memo, idx|
           unless idx["PRIMARY_KEY"]
@@ -71,7 +72,7 @@ module Sequel
       
       def ado_schema_indexes(table_name)
         rows=[]
-        fetch_ado_schema('indexes', [nil,nil,nil,nil,table_name]) do |row|
+        fetch_ado_schema('indexes', [nil,nil,nil,nil,table_name.to_s]) do |row|
           rows << AdoSchema::Index.new(row)
         end
         rows
@@ -79,7 +80,7 @@ module Sequel
       
       def ado_schema_columns(table_name)
         rows=[]
-        fetch_ado_schema('columns', [nil,nil,table_name,nil]) do |row| 
+        fetch_ado_schema('columns', [nil,nil,table_name.to_s,nil]) do |row| 
           rows << AdoSchema::Column.new(row)
         end
         rows.sort!{|a,b| a["ORDINAL_POSITION"] <=> b["ORDINAL_POSITION"]}
@@ -100,7 +101,7 @@ module Sequel
         ado_schema = AdoSchema.new(type, criteria)
         synchronize(opts[:server]) do |conn|
           begin
-            r = log_yield("OpenSchema #{type}, [#{criteria.join(',')}]") { 
+            r = log_yield("OpenSchema #{type.inspect}, #{criteria.inspect}") { 
               if ado_schema.criteria.empty?
                 conn.OpenSchema(ado_schema.type) 
               else

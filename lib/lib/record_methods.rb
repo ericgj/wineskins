@@ -2,6 +2,7 @@
 
   module RecordMethods
   
+    # ten at a time
     def transfer_records(tbl, renames=nil)
       src_tbl, dst_tbl = Array(tbl)
       dst_tbl ||= src_tbl

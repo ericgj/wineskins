@@ -13,12 +13,14 @@ class << (TEST_DB = Object.new)
   end
 
   def source_ado
-    dir = File.expand_path("fixtures/db/", 
-                           File.dirname(__FILE__)
-                          ).tr('/','\\')
-    conn_string = \
-      "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=#{dir}/source-ado.mdb;Jet OLEDB:System Database=#{dir}/source-ado.mdw;User ID=Admin;Password=admin!;"
-    @source_ado ||= Sequel.ado(:conn_string => conn_string)
+    @source_ado ||= begin
+      dir = File.expand_path("fixtures/db/", 
+                             File.dirname(__FILE__)
+                            ).tr('/','\\')
+      conn_string = \
+        "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=#{dir}/source-ado.mdb;Jet OLEDB:System Database=#{dir}/source-ado.mdw;User ID=Admin;Password=admin!;"
+      Sequel.ado(:conn_string => conn_string)
+    end
   end
   
   def setup

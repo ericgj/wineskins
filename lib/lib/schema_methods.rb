@@ -17,10 +17,10 @@
       renames ||= Hash[ source[src_tbl].columns.map {|col| [col,col]} ]
       this = self
       dest.create_table(dst_tbl) do
-        this.source.schema(src_tbl).each do |(fld, spec)|
+        this.source_schema(src_tbl).each do |(fld, spec)|
           column_opts = this.send(:schema_to_column_options, spec)
           if spec[:primary_key]
-            primary_key renames[fld]
+            primary_key renames[fld], column_opts
           else
             column renames[fld], column_opts.delete(:type), column_opts
           end
@@ -38,7 +38,7 @@
       renames ||= Hash[ source[src_tbl].columns.map {|col| [col,col]} ]
       this = self
       dest.alter_table(dst_tbl) do
-        this.source.indexes(src_tbl).each do |(name, spec)|
+        this.source_indexes(src_tbl).each do |(name, spec)|
           index_opts = this.send(:schema_to_index_options, spec)
           index_cols = spec[:columns].map {|c| renames[c]}
           add_index index_cols, index_opts.merge(:name => name)
@@ -55,7 +55,7 @@
       renames ||= Hash[ source[src_tbl].columns.map {|col| [col,col]} ]
       this = self
       dest.alter_table(dst_tbl) do
-        this.source.foreign_key_list(src_tbl).each do |spec|
+        this.source_foreign_key_list(src_tbl).each do |spec|
           fk_opts = this.send(:schema_to_foreign_key_options, spec)
           fk_cols = spec[:columns].map {|c| renames[c]}
           add_foreign_key fk_cols, spec[:table], fk_opts
@@ -63,7 +63,32 @@
       end
     end
     
+    def source_schema(tbl,opts={})
+      source.schema(tbl,opts)
+    rescue Sequel::Error
+      warn "Source database does not expose schema metadata. " +
+           "You should define schema manually."
+      []
+    end
+    
+    def source_indexes(tbl,opts={})
+      source.indexes(tbl,opts)
+    rescue Sequel::Error
+      warn "Source database does not expose index metadata. " +
+           "You should define indexes manually."
+      {}      
+    end
+    
+    def source_foreign_key_list(tbl,opts={})
+      source.foreign_key_list(tbl,opts)
+    rescue Sequel::Error
+      warn "Source database does not expose foreign key metadata. " +
+           "You should define foreign key constraints manually."
+      []
+    end
+    
     private
+    
     def schema_to_column_options(spec)
       Utils.remap_hash spec,
         {:db_type     => :type,
