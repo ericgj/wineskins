@@ -31,7 +31,7 @@
     end
     
     # note that renames only maps source to dest columns names, 
-    # not the index names
+    # not the index names, which are auto-generated rather than passed through
     def transfer_indexes(tbl, renames=nil)
       src_tbl, dst_tbl = Array(tbl)
       dst_tbl ||= src_tbl
@@ -41,7 +41,7 @@
         this.source_indexes(src_tbl).each do |(name, spec)|
           index_opts = this.send(:schema_to_index_options, spec)
           index_cols = spec[:columns].map {|c| renames[c]}
-          add_index index_cols, index_opts.merge(:name => name)
+          add_index index_cols, index_opts #.merge(:name => name)
         end
       end
     end

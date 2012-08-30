@@ -5,3 +5,4 @@ scratch
 *.mdb
 *.ldb
 
+*.gem
