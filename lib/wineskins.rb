@@ -9,9 +9,7 @@ require File.expand_path('wineskins/record_methods', File.dirname(__FILE__))
 module Wineskins
 
   def self.run(source, dest, &block)
-    dest.transaction do
-      Transfer.new(source, dest, &block).run
-    end
+    Transfer.new(source, dest, &block).run
   end
     
   class Transfer
@@ -33,10 +31,12 @@ module Wineskins
     end
     
     def run
-      create_tables!
-      create_indexes!
-      create_fk_constraints!
-      insert_records!
+      dest.transaction do
+        create_tables!
+        create_indexes!
+        create_fk_constraints!
+        insert_records!
+      end
     end
     
     def table(name, opts={}, &block)

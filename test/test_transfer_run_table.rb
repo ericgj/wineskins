@@ -93,4 +93,59 @@ describe 'Transfer#run, default global options, functional' do
     end
   end
   
+  describe 'multiple tables, default options' do
+    include TransferAssertions
+    
+    before do
+      TEST_DB.setup_source :users, :test_categories, :tests
+      TEST_DB.setup_dest
+      subject.define do
+        table :test_categories
+        table :users
+        table :tests
+      end.run
+    end
+    
+    it 'should create tables in dest' do
+      assert_includes dest.tables, :test_categories 
+      assert_includes dest.tables, :users 
+      assert_includes dest.tables, :tests 
+    end
+    
+    it 'should match schema specs in source' do
+      assert_columns_match(:test_categories)
+      assert_columns_match(:users)
+      assert_columns_match(:tests)
+    end
+
+    it 'should match index specs in source' do
+      assert_indexes_match(:test_categories)
+      assert_indexes_match(:users)
+      assert_indexes_match(:tests)
+    end
+    
+    it 'should match foreign key specs in source' do
+      assert_fk_match(:test_categories)
+      assert_fk_match(:users)
+      assert_fk_match(:tests)
+    end
+  
+    it 'each table should have the same number of records as in source' do
+      assert_equal source[:test_categories].count, dest[:test_categories].count
+      assert_equal source[:users].count, dest[:users].count
+      assert_equal source[:tests].count, dest[:tests].count
+    end
+    
+    it 'each table should have the same range of primary keys as in source' do
+      assert_equal source[:test_categories].get{max(id)}, dest[:test_categories].get{max(id)}
+      assert_equal source[:test_categories].get{min(id)}, dest[:test_categories].get{min(id)}
+
+      assert_equal source[:users].get{max(uid)}, dest[:users].get{max(uid)}
+      assert_equal source[:users].get{min(uid)}, dest[:users].get{min(uid)}
+
+      assert_equal source[:tests].get{max(id)}, dest[:tests].get{max(id)}
+      assert_equal source[:tests].get{min(id)}, dest[:tests].get{min(id)}
+    end
+  end
+  
 end
