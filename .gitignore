@@ -6,3 +6,4 @@ scratch
 *.ldb
 
 *.gem
+test/old

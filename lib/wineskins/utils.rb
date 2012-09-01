@@ -4,10 +4,14 @@
     extend self
    
     def remap_hash(hash, map)
-      map.inject({}) do |memo, (in_key, out_key)|
-        memo[out_key] = hash[in_key] if hash[in_key]
+      hash.inject({}) do |memo, (k,v)|
+        memo[ map[k] || k ] = v
         memo
-      end    
+      end
+    end
+
+    def limit_hash(hash, keys)
+      Hash[ hash.select {|k,v| keys.include?(k)} ]
     end
     
   end

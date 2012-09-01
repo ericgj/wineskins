@@ -2,15 +2,14 @@
 
   module RecordMethods
   
-    # ten at a time
-    def transfer_records(tbl, renames=nil)
-      src_tbl, dst_tbl = Array(tbl)
-      dst_tbl ||= src_tbl
-      renames ||= Hash[ source[src_tbl].columns.map {|col| [col,col]} ]
+    # reads + inserts ten records at a time
+    def transfer_records(table)
+      src_tbl, dst_tbl = table.source_name, table.dest_name
+      rename = table.rename_map(source[src_tbl].columns)
       source[src_tbl].each_slice(10) do |recs|
         dest[dst_tbl].multi_insert(
           recs.map {|rec|
-            remap = Utils.remap_hash(rec, renames)
+            remap = Utils.remap_hash(rec, rename)
             block_given? ? yield(remap) : remap           
           }
         )
