@@ -16,12 +16,16 @@ module Wineskins
     include SchemaMethods
     include RecordMethods
     
-    attr_accessor :source, :dest, :tables
+    attr_accessor :source, :dest
+    attr_reader :tables
+    attr_reader :before_hooks, :after_hooks
     
     def initialize(source, dest, &block)
       self.source = source
       self.dest = dest
       @tables = []
+      @before_hooks = Hash.new{|h,k|h[k]=[]}
+      @after_hooks = Hash.new{|h,k|h[k]=[]}
       self.define(&block) if block_given?
     end
 
@@ -32,10 +36,20 @@ module Wineskins
     
     def run
       dest.transaction do
+        trigger_before_hooks
+        trigger_before_hooks :create_tables
         create_tables!
+        trigger_after_hooks :create_tables
+        trigger_before_hooks :create_indexes
         create_indexes!
+        trigger_after_hooks :create_indexes
+        trigger_before_hooks :create_fk_constraints
         create_fk_constraints!
+        trigger_after_hooks :create_fk_constraints
+        trigger_before_hooks :insert_records
         insert_records!
+        trigger_after_hooks :insert_records
+        trigger_after_hooks
       end
     end
     
@@ -43,6 +57,27 @@ module Wineskins
       @tables << Table.new(name, opts, &block)
     end
     
+    def before(event=nil, &cb)
+      before_hooks[event] << cb
+    end
+    
+    def after(event=nil, &cb)
+      after_hooks[event] << cb
+    end
+    
+    [:before, 
+     :after
+    ].product([
+     :create_tables, 
+     :create_indexes, 
+     :create_fk_constraints, 
+     :insert_records
+    ]).each do |(hook, event)|
+      define_method("#{hook}_#{event}") do |&block|
+        send hook, event, &block
+      end
+    end
+      
     private
     
     def create_tables!
@@ -77,13 +112,24 @@ module Wineskins
       end
     end
     
+    def trigger_before_hooks(event=nil)
+      before_hooks[event].each do |cb|
+        cb.call
+      end
+    end
+
+    def trigger_after_hooks(event=nil)
+      after_hooks[event].each do |cb|
+        cb.call
+      end
+    end
+    
   end
   
   # data structure for table transfer definition
   class Table
   
     attr_accessor :source_name, :dest_name, :dest_columns
-    
     attr_accessor :include, 
                   :exclude, 
                   :rename, 
