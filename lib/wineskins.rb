@@ -82,7 +82,7 @@ module Wineskins
   # data structure for table transfer definition
   class Table
   
-    attr_accessor :source_name, :dest_name
+    attr_accessor :source_name, :dest_name, :dest_columns
     
     attr_accessor :include, 
                   :exclude, 
@@ -95,9 +95,9 @@ module Wineskins
     def initialize(name, opts={}, &block)
       self.source_name, self.dest_name = Array(name)
       self.dest_name ||= self.source_name
+      self.dest_columns = {}
       Builder.new(self, default_opts.merge(opts), &block)
     end
-    
     
     def create_table?
       !!create_table
@@ -132,7 +132,6 @@ module Wineskins
       }
     end
     
-
     class Builder
                               
       def initialize(target, opts={}, &block)
@@ -152,6 +151,10 @@ module Wineskins
       def rename(fldmap=nil, &block)
         @target.rename = fldmap || block
       end
+         
+      def column(name, *args)
+        @target.dest_columns[name] = args
+      end      
       
       def create_table(bool=true)
         @target.create_table = bool

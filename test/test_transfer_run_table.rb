@@ -140,4 +140,33 @@ describe 'Transfer#run, default global options, functional' do
     
   end
   
+  #------------------------------------------
+  describe 'single table, alternative column options passed for existing columns' do
+    include TransferAssertions
+    
+    before do
+      TEST_DB.setup_source :users, :test_categories, :tests
+      TEST_DB.setup_dest   :users, :test_categories
+      subject.define do
+        table :tests do
+          column :id, :integer
+          column :name, :text, :null => false, :default => 'unknown'
+        end
+      end.run
+    end
+
+    it 'should match passed specs for alternate columns, and source specs for other columns' do
+      assert_column_matches(:tests, :id, 
+        {:allow_null => true, :primary_key => false, :default => nil}
+      )
+      assert_column_matches(:tests, :name,
+        {:allow_null => false, :primary_key => false, :default => "'unknown'"}
+      )
+      [:score, :taken_at, :cat_id].each do |col|
+        assert_column_matches(:tests, col)
+      end      
+    end
+    
+  end
+  
 end

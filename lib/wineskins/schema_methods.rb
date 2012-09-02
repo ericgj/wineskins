@@ -5,14 +5,15 @@
     def transfer_table(table)
       src_tbl, dst_tbl = table.source_name, table.dest_name
       rename = table.rename_map(source[src_tbl].columns)
+      alters = table.dest_columns
       this = self
       dest.create_table(dst_tbl) do
         this.source_schema(src_tbl).each do |(fld, spec)|
-          column_opts = this.schema_to_column_options(spec)
-          if spec[:primary_key]
-            primary_key rename[fld], column_opts
+          if args = alters[fld]
+            column rename[fld], *args
           else
-            column rename[fld], spec[:type], column_opts
+            column_opts = this.schema_to_column_options(spec)
+            column rename[fld], column_opts.delete(:type), column_opts
           end
         end
       end
@@ -70,10 +71,14 @@
 
     
     def schema_to_column_options(spec)
-      Utils.limit_hash spec, [
-        :default,
-        :allow_null
-      ]
+      Utils.remap_hash(
+        Utils.limit_hash(spec, [
+          :primary_key,
+          :default,
+          :allow_null
+        ]),
+        :allow_null => :null
+      )
     end
     
     def schema_to_index_options(spec)

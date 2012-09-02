@@ -1,5 +1,8 @@
 ﻿module TransferAssertions
   
+  # I wish we could compare :type as well, but this seems somewhat adapter-
+  # dependent. Probably :default is adapter-dependent too.
+  #
   def assert_columns_match(table)
     match_keys = [:allow_null, :primary_key, :default]
     exp = source.schema(table).map {|name, col| 
@@ -16,10 +19,14 @@
     end
   end
   
-  def assert_column_matches(table, col)
+  def assert_column_matches(table, col, specs=nil)
     src_col, dst_col = Array(col)
     dst_col ||= src_col
-    exp = source.schema(table).find {|name,col| name == src_col}
+    exp = if specs 
+            [src_col, specs]
+          else
+            source.schema(table).find {|name,col| name == src_col}
+          end
     act = dest.schema(table).find {|name,col| name == dst_col}
     refute_nil act, "Expected column #{dst_col} not found in table #{table}"
     
