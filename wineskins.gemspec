@@ -15,5 +15,10 @@ Gem::Specification.new do |s|
   s.test_files    = `git ls-files -- test/*`.split("\n")
   s.require_paths = ["lib"]
 
+  s.requirements << "ruby >= 1.8.7"
+  s.requirements << "progressbar gem (optional)"
+  
   s.add_runtime_dependency 'sequel', '~> 3.0'
+  
+  s.add_development_dependency 'minitest'
 end
