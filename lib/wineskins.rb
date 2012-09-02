@@ -21,7 +21,7 @@ module Wineskins
     include RecordMethods
     
     attr_accessor :source, :dest
-    attr_reader :tables
+    attr_reader :tables, :progressbar
     attr_reader :before_hooks, :after_hooks
     
     def initialize(source, dest, &block)
@@ -87,6 +87,13 @@ module Wineskins
       end
     end
       
+    def set_progressbar(title, total)
+      require 'progressbar'
+      @progressbar = ProgressBar.new(title, total)
+    rescue LoadError
+      @progressbar = nil
+    end
+    
     private
     
     def create_tables!
