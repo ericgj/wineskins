@@ -3,7 +3,7 @@
 DSL:
   - implement table.exclude, table.include
   - test disabling create table/indexes/fk/records
-  - add hooks
+  - add hooks is:done
   - add insert_records filtering
   - implement `database` interface
   

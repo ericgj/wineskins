@@ -1,15 +1,19 @@
 require 'sequel'
+
+# Modification of ADO/Access adapter to get schema info
+# this should be incorporated into Sequel itself eventually
 require File.expand_path('sequel_ext/adapters/shared/access', File.dirname(__FILE__))
 
 require File.expand_path('wineskins/version', File.dirname(__FILE__))
 require File.expand_path('wineskins/utils', File.dirname(__FILE__))
+require File.expand_path('wineskins/transcript', File.dirname(__FILE__))
 require File.expand_path('wineskins/schema_methods', File.dirname(__FILE__))
 require File.expand_path('wineskins/record_methods', File.dirname(__FILE__))
 
 module Wineskins
 
-  def self.transfer(source, dest, &block)
-    Transfer.new(source, dest, &block).run
+  def self.transfer(source, dest, opts={}, &block)
+    Transfer.new(source, dest, &block).run(opts)
   end
     
   class Transfer
@@ -34,8 +38,9 @@ module Wineskins
       self
     end
     
-    def run
-      dest.transaction do
+    def run(opts={})
+      rollback = (opts[:dryrun] ? :always : nil)
+      dest.transaction(:rollback => rollback) do
         trigger_before_hooks
         trigger_before_hooks :create_tables
         create_tables!
@@ -51,6 +56,10 @@ module Wineskins
         trigger_after_hooks :insert_records
         trigger_after_hooks
       end
+    end
+    
+    def transcript(file=nil)
+      self.dest.loggers << Transcript.new(file)
     end
     
     def table(name, opts={}, &block)

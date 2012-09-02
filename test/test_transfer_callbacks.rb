@@ -14,7 +14,7 @@ describe 'Transfer#run callbacks, functional' do
     TEST_DB.setup_source :users
     TEST_DB.setup_dest
     spy = []
-    subject.define do
+    subject.define do      
       table :users
       
       after  { spy << :after }
