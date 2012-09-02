@@ -7,7 +7,7 @@
       src_tbl, dst_tbl = table.source_name, table.dest_name
       rename = table.rename_map(source[src_tbl].columns)
 
-      set_progressbar "=>#{dst_tbl}", source[src_tbl].count
+      set_progressbar dst_tbl, source[src_tbl].count
       
       source[src_tbl].each_slice(10) do |recs|
         dest[dst_tbl].multi_insert(
