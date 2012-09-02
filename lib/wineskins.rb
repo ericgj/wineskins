@@ -8,7 +8,7 @@ require File.expand_path('wineskins/record_methods', File.dirname(__FILE__))
 
 module Wineskins
 
-  def self.run(source, dest, &block)
+  def self.transfer(source, dest, &block)
     Transfer.new(source, dest, &block).run
   end
     
