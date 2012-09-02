@@ -1,54 +1,9 @@
-﻿require File.expand_path('./helper', File.dirname(__FILE__))
+﻿require File.expand_path('helper', File.dirname(__FILE__))
+require File.expand_path('helpers/transfer_assertions', File.dirname(__FILE__))
 require File.expand_path('../lib/wineskins', File.dirname(__FILE__))
 
 TEST_DB.source_connect = 'sqlite://test/fixtures/db/source.sqlite3'
 TEST_DB.dest_connect   = 'sqlite://test/fixtures/db/dest.sqlite3'
-
-module TransferAssertions
-  
-  def assert_columns_match(table)
-    match_keys = [:allow_null, :primary_key, :type]
-    exp = source.schema(table).map {|col| 
-            Wineskins::Utils.limit_hash(col, match_keys) 
-          }
-    act = dest.schema(table).map {|col| 
-            Wineskins::Utils.limit_hash(col, match_keys) 
-          }
-    assert_equal exp.length, act.length,
-      "Expected #{exp.length} columns in table #{table}, got #{act.length}"
-    exp.each do |col|
-      assert_includes act, col,
-        "Expected column in table #{table}:\n#{col.inspect}"
-    end
-  end
-  
-  def assert_indexes_match(table)
-    exp, act = source.indexes(table), dest.indexes(table)
-    assert_equal exp.length, act.length, 
-      "Expected #{exp.length} indexes for table #{table}, got #{act.length}"
-    exp.values.each do |idx|
-      assert_includes act.values, idx,
-        "Expected index in table #{table}:\n#{idx.inspect}"
-    end
-  end
-  
-  def assert_fk_match(table)
-    match_keys = [:columns, :table, :key, :on_delete, :on_update]
-    exp = source.foreign_key_list(table).map {|fk| 
-            Wineskins::Utils.limit_hash(fk, match_keys) 
-          }
-    act = dest.foreign_key_list(table).map {|fk| 
-            Wineskins::Utils.limit_hash(fk, match_keys) 
-          }
-    assert_equal exp.length, act.length,
-      "Expected #{exp.length} foreign key constraints for table #{table}, got #{act.length}"
-    exp.each do |fk|
-      assert_includes act, fk, 
-        "Expected foreign key in table #{table}:\n#{fk.inspect}"
-    end
-  end
-  
-end
 
 describe 'Transfer#run, default global options, functional' do
 
@@ -56,6 +11,7 @@ describe 'Transfer#run, default global options, functional' do
   let(:source) { TEST_DB.source }
   let(:dest)   { TEST_DB.dest }
   
+  #------------------------------------------
   describe 'single table, default options' do
     include TransferAssertions
     
@@ -93,6 +49,7 @@ describe 'Transfer#run, default global options, functional' do
     end
   end
   
+  #------------------------------------------
   describe 'multiple tables, default options' do
     include TransferAssertions
     
@@ -146,6 +103,41 @@ describe 'Transfer#run, default global options, functional' do
       assert_equal source[:tests].get{max(id)}, dest[:tests].get{max(id)}
       assert_equal source[:tests].get{min(id)}, dest[:tests].get{min(id)}
     end
+  end
+  
+
+  #------------------------------------------
+  describe 'single table, rename columns with hash' do
+    include TransferAssertions
+    
+    before do
+      TEST_DB.setup_source :users, :test_categories, :tests
+      TEST_DB.setup_dest   :users, :test_categories
+      subject.define do
+        table :tests do
+          rename :user_id => :uid, :name => :testname
+        end
+      end.run
+    end  
+    
+    it 'should match schema specs in source, with renamed columns' do
+      assert_column_matches(:tests, [:user_id, :uid])
+      assert_column_matches(:tests, [:name, :testname])
+      [:score, :taken_at, :cat_id].each do |col|
+        assert_column_matches(:tests, col)
+      end
+    end
+
+    it 'should match index specs in source, with renamed columns' do
+      assert_index_matches(:tests, [:name], {:name => :testname})
+      assert_index_matches(:tests, [:score])
+    end
+
+    it 'should match foreign key specs in source, with renamed columns' do
+      assert_fk_matches(:tests, [:user_id], {:user_id => :uid})
+      assert_fk_matches(:tests, [:cat_id])
+    end
+    
   end
   
 end

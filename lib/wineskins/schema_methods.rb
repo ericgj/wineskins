@@ -12,7 +12,7 @@
           if spec[:primary_key]
             primary_key rename[fld], column_opts
           else
-            column rename[fld], column_opts.delete(:type), column_opts
+            column rename[fld], spec[:type], column_opts
           end
         end
       end
@@ -70,30 +70,24 @@
 
     
     def schema_to_column_options(spec)
-      Utils.remap_hash spec,
-        {:db_type     => :type,
-         :primary_key => :primary_key,
-         :default     => :default,
-         :allow_null  => :null
-        }
+      Utils.limit_hash spec, [
+        :default,
+        :allow_null
+      ]
     end
     
     def schema_to_index_options(spec)
-      Utils.remap_hash spec,
-        {:unique => :unique,
-         :type   => :type,
-         :where  => :where
-        }
+      Utils.limit_hash spec, [:unique]
     end
     
     def schema_to_foreign_key_options(spec)
-      Utils.remap_hash spec,
-        {:key        => :key,
-         :deferrable => :deferrable,
-         :name       => :name,
-         :on_delete  => :on_delete,
-         :on_update  => :on_update
-        }
+      Utils.limit_hash spec, [
+        :key,
+        :deferrable,
+        :name,
+        :on_delete,
+        :on_update
+      ]
     end
     
   end

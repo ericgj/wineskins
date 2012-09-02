@@ -50,9 +50,9 @@ class << (TEST_SCHEMA = Object.new)
   def tests(db)
     db.create_table! :tests do
       primary_key :id
-      String :name
-      Integer :score, :index => true
-      DateTime :taken_at
+      column :name, :string
+      column :score, :integer, :index => true
+      column :taken_at, :datetime
       index :name, :unique => true
       foreign_key :user_id, :users, :on_delete => :cascade
       foreign_key :cat_id, :test_categories, :on_update => :cascade
@@ -62,16 +62,16 @@ class << (TEST_SCHEMA = Object.new)
   def users(db)
     db.create_table! :users do
       primary_key :uid
-      String :username
-      DateTime :joined_at
+      column :username, :string
+      column :joined_at, :datetime
     end
   end
   
   def test_categories(db)
     db.create_table! :test_categories do
       primary_key :id
-      String :name
-      String :desc
+      column :name, :string
+      column :desc, :string
     end
   end
   

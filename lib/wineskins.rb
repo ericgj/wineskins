@@ -16,7 +16,7 @@ module Wineskins
     include SchemaMethods
     include RecordMethods
     
-    attr_accessor :source, :dest
+    attr_accessor :source, :dest, :tables
     
     def initialize(source, dest, &block)
       self.source = source
@@ -118,7 +118,7 @@ module Wineskins
     # todo: handle Proc or Regex === rename
     def rename_map(cols)
       col_map = cols.inject({}) {|m,c| m[c]=c;m}
-      Utils.remap_hash( col_map, rename )
+      col_map.merge(rename)
     end
     
     def default_opts
