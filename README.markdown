@@ -15,10 +15,10 @@ This will copy the tables, indexes, and foreign key constraints from `old_db` in
 ### To rename tables:
 
     Wineskins.transfer(old_db, new_db) do
-      tables :students, :classes, [:enrollments, :student_classes]
+      tables :students, [:classes, :courses], :enrollments
     end
     
-The `enrollments` table in the source will be renamed `student_classes` in the destination. All foreign keys referencing `enrollments` will be changed accordingly.
+The `classes` table in the source will be renamed `courses` in the destination. All foreign keys referencing `classes` (in e.g. the `enrollments` table) will be changed accordingly.
 
 ### To rename fields:
 
@@ -148,9 +148,18 @@ scenario, or (2) differences between database adapters that Sequel cannot
 handle. 
 
 The principle is that _as much as possible, the source database should determine
-the schema_, thus minimizing boilerplate schema definition code. Also it greatly
-avoids, for simple but typical cases, the great pain and knashing of the teeth 
-involved in transforming the source data for import.
+the schema_, thus minimizing manually-entered (and possibly incorrect) schema 
+definition code. Also it helps avoid, for simple but typical cases, the great 
+pain and knashing of the teeth involved in transforming the source data for 
+import.
+
+## Alternatives / Similar projects
+
+- Sequel's [schema dumper extension](http://sequel.rubyforge.org/rdoc-plugins/files/lib/sequel/extensions/schema_dumper_rb.html) lets you dump and load schema using Sequel's migration syntax.
+- [DbCopier](https://github.com/santosh79/db-copier), apparently unmaintained?
+- [Linkage](https://github.com/coupler/linkage) mimics joins between tables in
+different databases.
+
 
 ## Please help
 
