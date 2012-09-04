@@ -113,13 +113,29 @@ in a callback like:
         drop_column :status
       end
     end
-    
+  
 ### A note on the syntax
 
 In the examples above I've used both a 'hash-options' style and a block syntax.
 Either can be used interchangably and even in combination if you want (although
 it's ugly looking). The options set in the block always override the options
 hash. Also, custom `column` definitions must be done within a block.
+
+### Flexible execution
+
+You can separate the transfer _execution_ from _definition_ like:
+
+    transfer = Wineskins::Transfer.new(source, dest) do
+      #...
+    end
+    
+    transfer.run   # later
+    
+For the command-line runner, I'm also considering having a 'transfer definition'
+file which would be eval-ed within the scope of a `Wineskins::Transfer`, rackup-
+style. This would allow the specification of the source and dest databases
+separately from the transfer definition.
+
 
 ## Motivations
 
