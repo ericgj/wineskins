@@ -70,7 +70,7 @@ Although it's nearly as easy to do this manually in a hook (see below).
 It's also possible to specify a filter on the source records that get imported.
 
     table :students do
-      insert_records :grad_year => [2010..2012]
+      insert_records :grad_year => (2010..2012)
     end
 
 Filters can be anything that Sequel accepts as arguments to `Dataset#filter`.
