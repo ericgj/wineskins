@@ -56,6 +56,7 @@ Note that in this example, all of the column definitions _except `slots`_ will b
 
 ### Excluding and including columns
 
+(_Note: not yet implemented._)
 You can also exclude specific columns entirely, or include only specified columns:
 
     table :enrollments, :exclude => [:final_grade, :status]
@@ -63,12 +64,24 @@ You can also exclude specific columns entirely, or include only specified column
 
 Although it's nearly as easy to do this manually in a hook (see below).
 
+### Limiting the imported data
+
+(_Note: not yet implemented._)
+It's also possible to specify a filter on the source records that get imported.
+
+    table :students do
+      insert_records :grad_year => [2010..2012]
+    end
+
+Filters can be anything that Sequel accepts as arguments to `Dataset#filter`.
+
 ### Generating a transcript
     
-If you just want a script for generating the schema, and actually don't want to  make database changes, do something like this:
+If you just want a script for generating the schema later, and don't actually
+want to make database changes, do something like this:
 
     Wineskins.transfer(source_db, dest_db, :dryrun => true) do
-      transcript 'path/to/transfer.sql'  # if not specified, writes to $stdout
+      transcript 'path/to/transfer.sql'  # if no arg, writes to $stdout
       tables :schema_only => true
     end
 
@@ -101,9 +114,16 @@ in a callback like:
       end
     end
     
+### A note on the syntax
+
+In the examples above I've used both a 'hash-options' style and a block syntax.
+Either can be used interchangably and even in combination if you want (although
+it's ugly looking). The options set in the block always override the options
+hash. Also, custom `column` definitions must be done within a block.
+
 ## Motivations
 
-This tool aims to simplify transferring data is designed around the 'canonical'
+This tool aims to simplify transferring data is designed around the canonical
 case where the destination database is completely empty, and you want to set up
 everything the way it is in the source and then import the data. Of course,
 many scenarios different from this are possible, but the point is that 
@@ -112,7 +132,28 @@ scenario, or (2) differences between database adapters that Sequel cannot
 handle. 
 
 The principle is that _as much as possible, the source database should determine
-the schema_, thus minimizing boilerplate code.
+the schema_, thus minimizing boilerplate schema definition code. Also it greatly
+avoids, for simple but typical cases, the great pain and knashing of the teeth 
+involved in transforming the source data for import.
+
+## Please help
+
+This is a young young project, don't expect it will work out of the box without
+some futzing. It's only been formally tested on Sqlite to Sqlite transfers, and
+ad-hoc tested on a 'real' MS Access to Sqlite transfer. (In fact you'll see 
+there's some patches to the Sequel ADO/Access adapter in there, these hopefully
+will be moved into Sequel proper eventually.)
+
+What I'm saying is, if you start using it and run into weird shit, at the very 
+least let me know about it. Better still if you send some informed guesses as to
+what's going on. Pull requests are awesome and going the extra mile and all that
+... but before you go to the trouble, unless it's a really minor fix, let me 
+know about the issue, I might be able to save you some time and we can have
+a conversation about it you know?
+
+There's a TODO list in the project root if you want to see where I'm thinking 
+of heading, comments welcome.
+
 
 ## Requirements
 

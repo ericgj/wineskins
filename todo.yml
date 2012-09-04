@@ -2,10 +2,9 @@
 -------
 DSL:
   - implement table.exclude, table.include
-  - test disabling create table/indexes/fk/records
   - add insert_records filtering
-  - implement `database` interface
   
 Other:
   - add command-line runner
   - set up test environment to easily test vs different adapters
+  - add default validations of imported data + ability to define custom validations, possibly via minitest

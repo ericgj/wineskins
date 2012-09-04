@@ -21,13 +21,13 @@ module Wineskins
     include RecordMethods
     
     attr_accessor :source, :dest
-    attr_reader :tables, :progressbar
+    attr_reader :table_defs, :progressbar
     attr_reader :before_hooks, :after_hooks
     
     def initialize(source, dest, &block)
       self.source = source
       self.dest = dest
-      @tables = []
+      @table_defs = []
       @before_hooks = Hash.new{|h,k|h[k]=[]}
       @after_hooks = Hash.new{|h,k|h[k]=[]}
       self.define(&block) if block_given?
@@ -62,8 +62,14 @@ module Wineskins
       self.dest.loggers << Transcript.new(file)
     end
     
+    def tables(*args)
+      opts = (Hash === args.last ? args.pop : {})
+      tbls = (args.empty? ? self.source.tables : args)
+      tbls.each do |tbl| table(tbl, opts) end
+    end
+    
     def table(name, opts={}, &block)
-      @tables << Table.new(name, opts, &block)
+      @table_defs << Table.new(name, opts, &block)
     end
     
     def before(event=nil, &cb)
@@ -97,32 +103,32 @@ module Wineskins
     private
     
     def create_tables!
-      @tables.select {|t| t.create_table?}.each do |table|
+      @table_defs.select {|t| t.create_table?}.each do |table|
         transfer_table table
       end
     end
     
     def create_indexes!
-      @tables.select {|t| t.create_indexes?}.each do |table|
+      @table_defs.select {|t| t.create_indexes?}.each do |table|
         transfer_indexes table
       end
     end
     
     def create_fk_constraints!
-      @tables.select {|t| t.create_fk_constraints?}.each do |table|
+      @table_defs.select {|t| t.create_fk_constraints?}.each do |table|
         transfer_fk_constraints table, table_rename
       end
     end
     
     def insert_records!
-      @tables.select {|t| t.insert_records?}.each do |table|
+      @table_defs.select {|t| t.insert_records?}.each do |table|
         transfer_records table
       end
     end
     
     # used in create_fk_constraints
     def table_rename
-      @tables.inject({}) do |memo, table|
+      @table_defs.inject({}) do |memo, table|
         memo[table.source_name] = table.dest_name
         memo
       end
@@ -234,12 +240,25 @@ module Wineskins
         @target.insert_records = bool
       end
       
+      def schema_only
+        create_table; create_indexes; create_fk_constraints
+        insert_records false
+      end
+      
+      def records_only
+        create_table(false); create_indexes(false); create_fk_constraints(false)
+        insert_records
+      end
+      
       def set_options(opts)
         [:include, :exclude, :rename, 
-         :create_table, :create_indexes, :create_fk_constraints, :insert_records
+         :create_table, :create_indexes, :create_fk_constraints, :insert_records,
         ].each do |opt|
           self.send(opt, opts[opt]) if opts[opt]
         end 
+        [:schema_only,  :records_only].each do |opt|
+          self.send(opt) if opts[opt]
+        end
       end
           
     end

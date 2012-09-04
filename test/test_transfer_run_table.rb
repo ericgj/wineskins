@@ -5,7 +5,7 @@ require File.expand_path('../lib/wineskins', File.dirname(__FILE__))
 TEST_DB.source_connect = 'sqlite://test/fixtures/db/source.sqlite3'
 TEST_DB.dest_connect   = 'sqlite://test/fixtures/db/dest.sqlite3'
 
-describe 'Transfer#run, default global options, functional' do
+describe 'Transfer#run, functional' do
 
   subject { Wineskins::Transfer.new(source,dest) }
   let(:source) { TEST_DB.source }
