@@ -28,7 +28,7 @@ The `classes` table in the source will be renamed `courses` in the destination. 
     
 Primary keys, indexes, foreign keys will be changed accordingly in the destination database.
 
-### Want to only create the schema, but not import data yet?
+### Want to create the schema, but not import data yet?
 
     tables :students, :classes, :enrollments, :schema_only => true
     
@@ -143,9 +143,9 @@ This tool aims to simplify transferring data is designed around the canonical
 case where the destination database is completely empty, and you want to set up
 everything the way it is in the source and then import the data. Of course,
 many scenarios different from this are possible, but the point is that 
-everything you should need to specify is either due to (1) differences from this
+the only things you should need to specify are either (1) differences from this
 scenario, or (2) differences between database adapters that Sequel cannot 
-handle. 
+handle automatically. 
 
 The principle is that _as much as possible, the source database should determine
 the schema_, thus minimizing manually-entered (and possibly incorrect) schema 
