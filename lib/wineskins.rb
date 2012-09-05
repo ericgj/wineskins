@@ -1,8 +1,8 @@
 require 'sequel'
 
 # Modification of ADO/Access adapter to get schema info
-# this should be incorporated into Sequel itself eventually
-require File.expand_path('sequel_ext/adapters/shared/access', File.dirname(__FILE__))
+# incorporated into Sequel itself v3.39.0
+# require File.expand_path('sequel_ext/adapters/shared/access', File.dirname(__FILE__))
 
 require File.expand_path('wineskins/version', File.dirname(__FILE__))
 require File.expand_path('wineskins/utils', File.dirname(__FILE__))

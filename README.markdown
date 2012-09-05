@@ -139,42 +139,41 @@ separately from the transfer definition.
 
 ## Motivations
 
-This tool aims to simplify transferring data is designed around the canonical
-case where the destination database is completely empty, and you want to set up
-everything the way it is in the source and then import the data. Of course,
-many scenarios different from this are possible, but the point is that 
+This tool aims to simplify transferring data between databases, and is designed 
+around the canonical case where the destination database is completely empty, 
+and you want to set up everything the way it is in the source and then import 
+the data. Of course, many other scenarios are possible, but the point is that 
 the only things you should need to specify are either (1) differences from this
 scenario, or (2) differences between database adapters that Sequel cannot 
 handle automatically. 
 
 The principle is that _as much as possible, the source database should determine
-the schema_, thus minimizing manually-entered (and possibly incorrect) schema 
-definition code. Also it helps avoid, for simple but typical cases, the great 
-pain and knashing of the teeth involved in transforming the source data for 
-import.
+the schema of the destination database_, thus minimizing manually-entered (and 
+possibly incorrect) schema definition code. Also it helps avoid, for simple but 
+typical cases, the great pain and knashing of the teeth involved in massaging 
+the source data into the right format for for importing.
 
 ## Alternatives / Similar projects
 
-- Sequel's [schema dumper extension](http://sequel.rubyforge.org/rdoc-plugins/files/lib/sequel/extensions/schema_dumper_rb.html) lets you dump and load schema using Sequel's migration syntax.
+- Sequel's [schema dumper extension](http://sequel.rubyforge.org/rdoc-plugins/files/lib/sequel/extensions/schema_dumper_rb.html) lets you dump and load schema using Sequel's migration DSL.
 - [DbCopier](https://github.com/santosh79/db-copier), apparently unmaintained?
 - [Linkage](https://github.com/coupler/linkage) mimics joins between tables in
 different databases.
-
 
 ## Please help
 
 This is a young young project, don't expect it will work out of the box without
 some futzing. It's only been formally tested on Sqlite to Sqlite transfers, and
 ad-hoc tested on a 'real' MS Access to Sqlite transfer. (In fact you'll see 
-there's some patches to the Sequel ADO/Access adapter in there, these hopefully
-will be moved into Sequel proper eventually.)
+there's some patches to the Sequel ADO adapter in there, which have been moved 
+into Sequel proper as of v3.39.0).
 
-What I'm saying is, if you start using it and run into weird shit, at the very 
-least let me know about it. Better still if you send some informed guesses as to
-what's going on. Pull requests are awesome and going the extra mile and all that
-... but before you go to the trouble, unless it's a really minor fix, let me 
-know about the issue, I might be able to save you some time and we can have
-a conversation about it you know?
+If you start using it and run into weird shit, at the very least let me know 
+about it. Better still if you send some informed guesses as to what's going on. 
+Pull requests are awesome and going the extra mile and all that... but before 
+you go to the trouble, unless it's a really minor fix, let me know about the 
+issue, I might be able to save you some time and we can have a conversation 
+about it you know?
 
 There's a TODO list in the project root if you want to see where I'm thinking 
 of heading, comments welcome.
