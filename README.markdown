@@ -164,9 +164,7 @@ different databases.
 
 This is a young young project, don't expect it will work out of the box without
 some futzing. It's only been formally tested on Sqlite to Sqlite transfers, and
-ad-hoc tested on a 'real' MS Access to Sqlite transfer. (In fact you'll see 
-there's some patches to the Sequel ADO adapter in there, which have been moved 
-into Sequel proper as of v3.39.0).
+ad-hoc tested on a 'real' MS Access to Sqlite transfer.
 
 If you start using it and run into weird shit, at the very least let me know 
 about it. Better still if you send some informed guesses as to what's going on. 
@@ -182,6 +180,6 @@ of heading, comments welcome.
 ## Requirements
 
   - ruby >= 1.8.7
-  - sequel ~> 3.0
+  - sequel ~> 3.0 (note >= 3.39 needed for MS Access source databases)
   - progressbar (optional)
   
