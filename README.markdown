@@ -130,12 +130,18 @@ You can separate the transfer _execution_ from _definition_ like:
     end
     
     transfer.run   # later
-    
-For the command-line runner, I'm also considering having a 'transfer definition'
-file which would be eval-ed within the scope of a `Wineskins::Transfer`, rackup-
-style. This would allow the specification of the source and dest databases
-separately from the transfer definition.
 
+### Command-line execution
+
+The `wskins` executable lets you further separate the transfer _definition_ from
+the specification of source and destination databases. 
+
+    wskins --config path/to/transfer.rb --dry-run  db://source/url  db://dest/url
+    
+The config file (by default "./transfer.rb") contains whatever you want to put
+in the `Wineskins.transfer` block. It is eval'ed in the context of the given
+source and destination Sequel databases (specified as Sequel URLs on the
+command line).
 
 ## Motivations
 
