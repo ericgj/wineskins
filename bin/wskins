@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+
+require File.expand_path('../lib/wineskins_cli', File.dirname(__FILE__))
+
+Wineskins::Runner.new(ARGV).run
