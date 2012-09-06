@@ -5,7 +5,7 @@ Gem::Specification.new do |s|
   s.version     = Wineskins::VERSION
   s.authors     = ["Eric Gjertsen"]
   s.email       = ["ericgj72@gmail.com"]
-  s.homepage    = ""
+  s.homepage    = "https://github.com/ericgj/wineskins"
   s.summary     = %q{Simple database transfer utility using Sequel}
   s.description = %q{Simple database transfer utility using Sequel}
 
