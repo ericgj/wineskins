@@ -3,8 +3,8 @@
 DSL:
   - implement table.exclude, table.include
   - add insert_records filtering
+  - regex and/or proc -based field and table renaming
   
 Other:
-  - add command-line runner
   - set up test environment to easily test vs different adapters
   - add default validations of imported data + ability to define custom validations, possibly via minitest

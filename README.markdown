@@ -4,31 +4,80 @@ A Ruby database transfer utility built on [Sequel](http://sequel.rubyforge.org/)
 
 Sometimes your old wine needs to be poured into new skins too.
 
+## Basic usage
+
+From the command line, the utility runs __transfer instructions__ for a specified
+__source__ and __destination__ database. By default, it looks for these instructions
+in the file `./transfer.rb`. (The syntax of these instructions will be 
+described in a moment.) So the easiest way to execute the utility is:
+
+    wskins some-db://source/url some-other-db://dest/url
+    
+This will run the instructions in ./transfer.rb to transfer the schema and/or 
+data from the specified source database (as a URL recognized by 
+`Sequel.connect`), to the specified destination database.
+
+You can specify another transfer instructions file via `--config`:
+
+    wskins --config path/to/transfer.rb some-db://source/url some-other-db://dest/url
+    
+If your databases can't be opened easily via a URL, instead you can manually set
+the constants `SOURCE_DB` and `DEST_DB` to your Sequel databases within a ruby 
+script, and require that script from the command line like this:
+
+    wskins --require path/to/db/setup.rb
+
+(This is necessary for instance if you are using ADO adapters.)
+
+Run `wskins --help` to see complete usage options.
+
+## How to install
+
+[Get Ruby](http://www.ruby-lang.org/en/downloads/) if you don't have it.
+
+Then
+  
+    gem install wineskins
+    
+This will also install the sequel gem. If Sequel needs native drivers for your 
+database(s), install them separately. Consult the 
+[Sequel docs](http://sequel.rubyforge.org/) for more info.
+
+## Transfer instructions syntax
+    
 ### A very simple case:
 
-    Wineskins.transfer(old_db, new_db) do
-      tables :students, :classes, :enrollments
-    end
+    tables :students, :classes, :enrollments
     
-This will copy the tables, indexes, and foreign key constraints from `old_db` into `new_db`, and then insert all the records, for the three listed tables.
+This will copy the tables, indexes, and foreign key constraints, and then insert 
+all the records, for the three listed tables.
 
 ### To rename tables:
 
-    Wineskins.transfer(old_db, new_db) do
-      tables :students, [:classes, :courses], :enrollments
-    end
+    tables :students, [:classes, :courses], :enrollments
     
-The `classes` table in the source will be renamed `courses` in the destination. All foreign keys referencing `classes` (in e.g. the `enrollments` table) will be changed accordingly.
+The `classes` table in the source will be renamed `courses` in the destination. 
+All foreign keys referencing `classes` (in e.g. the `enrollments` table) will be 
+changed accordingly.
+
+If you are copying records, be careful in the order you list the tables -- this
+is the order that the records will be inserted. If you have foreign key
+constraints between two tables, you must list the target (primary key) table 
+first to ensure that the keys exist before inserting the foreign key table
+records. 
+
+So in this example, the `:students` and `:classes` tables are transferred _before_
+the `:enrollments` table, which presumably has foreign keys to `:students` and
+`:classes`.
 
 ### To rename fields:
 
-    Wineskins.transfer(old_db, new_db) do
-      table :classes, :rename => {:class_id => :id}
-    end
+    table :classes, :rename => {:class_id => :id}
     
-Primary keys, indexes, foreign keys will be changed accordingly in the destination database.
+Primary keys, indexes, foreign keys will be changed accordingly in the 
+destination database.
 
-### Want to create the schema, but not import data yet?
+### Want to copy the schema, but not import data yet?
 
     tables :students, :classes, :enrollments, :schema_only => true
     
@@ -46,13 +95,16 @@ You have finer-grained control as well:
 ### Adjusting column definitions
 
 Sometimes you need to manually adjust column types or other options in the
-destination. You can pass through column definitions to Sequel's schema generator, and they will be used _instead of_ the source database table:
+destination: for example due to different conventions between databases. You can 
+pass through column definitions to Sequel's schema generator, and they will be 
+used _instead of_ the source database table:
 
     table :classes do
       column :slots, :integer, :null => false, :default => 25
     end
     
-Note that in this example, all of the column definitions _except `slots`_ will be copied from the source table, while `slots` will be defined as specified.
+Note that in this example, all of the column definitions _except `slots`_ will 
+be copied from the source table, while `slots` will be defined as specified.
 
 ### Excluding and including columns
 
@@ -80,18 +132,18 @@ Filters can be anything that Sequel accepts as arguments to `Dataset#filter`.
 If you just want a script for generating the schema later, and don't actually
 want to make database changes, do something like this:
 
-    Wineskins.transfer(source_db, dest_db, :dryrun => true) do
-      transcript 'path/to/transfer.sql'  # if no arg, writes to $stdout
-      tables :schema_only => true
-    end
+    transcript 'path/to/transfer.sql'
+    tables :schema_only => true
 
-### Manual futzing
+and include the `--dry-run` option on the command line.
+
+### Hooks for manual futzing
 
 Wineskins executes a given transfer in four stages:
 
   1. All the tables are created (`:create_table`)
-  2. All the indexes are created via alter_table (`:create_indexes`)
-  3. All the foreign key constraints are created via alter_table (`:create_fk_constraints`)
+  2. All the indexes are created via `alter_table` (`:create_indexes`)
+  3. All the foreign key constraints are created via `alter_table` (`:create_fk_constraints`)
   4. The records are inserted into each table from the source database (`:insert_records`)
   
 Each of these stages has a `before_*` and `after_*` hook where you can stick
@@ -114,12 +166,15 @@ in a callback like:
       end
     end
   
+Within callbacks, the source database is referenced via `source`, the 
+destination database via `dest`.
+
 ### A note on the syntax
 
 In the examples above I've used both a 'hash-options' style and a block syntax.
 Either can be used interchangably and even in combination if you want (although
 it's ugly looking). The options set in the block always override the options
-hash. Also, custom `column` definitions must be done within a block.
+hash. Also, note that custom `column` definitions must be done within a block.
 
 ### Flexible execution
 
@@ -131,17 +186,6 @@ You can separate the transfer _execution_ from _definition_ like:
     
     transfer.run   # later
 
-### Command-line execution
-
-The `wskins` executable lets you further separate the transfer _definition_ from
-the specification of source and destination databases. 
-
-    wskins --config path/to/transfer.rb --dry-run  db://source/url  db://dest/url
-    
-The config file (by default "./transfer.rb") contains whatever you want to put
-in the `Wineskins.transfer` block. It is eval'ed in the context of the given
-source and destination Sequel databases (specified as Sequel URLs on the
-command line).
 
 ## Motivations
 
@@ -152,6 +196,17 @@ the data. Of course, many other scenarios are possible, but the point is that
 the only things you should need to specify are either (1) differences from this
 scenario, or (2) differences between database adapters that Sequel cannot 
 handle automatically. 
+
+Note that accordingly, if schema or records already exist in your destination,
+you are responsible for dealing with this in whatever way makes sense for your
+scenario. No tables, indexes, constraints, or records are automatically deleted
+in the destination.
+
+So, you might want to wipe out and replace what exists (via `drop_table`,
+`dest[:table].delete`, etc. in callbacks); or you might want to keep what 
+exists (omitting changes via `:schema_only`, `:records_only` options, etc.); or
+you might want to alter what exists (via custom `alter_table`, 
+`dest[:table].filter(some_filter).delete`, etc. in callbacks).
 
 The principle is that _as much as possible, the source database should determine
 the schema of the destination database_, thus minimizing manually-entered (and 
