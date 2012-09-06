@@ -176,17 +176,6 @@ Either can be used interchangably and even in combination if you want (although
 it's ugly looking). The options set in the block always override the options
 hash. Also, note that custom `column` definitions must be done within a block.
 
-### Flexible execution
-
-You can separate the transfer _execution_ from _definition_ like:
-
-    transfer = Wineskins::Transfer.new(source, dest) do
-      #...
-    end
-    
-    transfer.run   # later
-
-
 ## Motivations
 
 This tool aims to simplify transferring data between databases, and is designed 
